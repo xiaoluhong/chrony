@@ -1,0 +1,95 @@
+﻿apiVersion: {{ template "deployment_api_version" . }}
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-server
+{{- if .Values.global.namespace }}
+  namespace: {{ .Values.global.namespace }}
+{{- else }}
+  namespace: chrony-system
+{{- end }}
+  labels:
+    app: {{ .Chart.Name }}-server
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.server.labels }}
+{{ toYaml .Values.server.labels | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.server.updateStrategy }}
+  updateStrategy:
+{{ toYaml .Values.server.updateStrategy | indent 4 }}
+{{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-server
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-server
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    {{- if .Values.server.labels }}
+    {{ toYaml .Values.server.labels | indent 4 }}
+    {{- end }}
+{{- if .Values.server.annotations }}
+{{ toYaml .Values.server.annotations | indent 8 }}
+{{- end }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-server
+        image: {{ template "system_default_registry" . }}{{ .Values.global.repository }}:{{ .Values.global.tag }}
+        imagePullPolicy: {{ .Values.global.pullPolicy | quote }}
+        securityContext:
+{{ toYaml .Values.server.securityContext | indent 10 }}
+        {{- if .Values.server.command }}
+        command: {{ .Values.server.command }}
+        {{ end }}
+        env:
+        {{- range $key, $value := .Values.server.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        resources:
+{{ toYaml .Values.server.resources | indent 10 }}
+{{- if .Values.server.extraVolumeMounts }}
+{{ toYaml .Values.server.extraVolumeMounts | indent 8 }}
+{{- end }}
+{{- if .Values.server.service }}
+        ports:
+{{- range $port := .Values.server.service.ports }}
+          - name: {{ $port.name }}
+            containerPort: {{ $port.port }}
+{{- if $port.protocol }}
+            protocol: {{ $port.protocol }}
+{{- end }}
+{{- end }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /etc/chrony/chrony.conf
+          name: {{ .Chart.Name }}-server-conf
+          subPath: chrony.conf
+{{- if .Values.server.extraVolumes }}
+{{ toYaml .Values.server.extraVolumes | indent 6 }}
+{{- end }}
+      nodeSelector:
+{{- if .Values.server.nodeSelector }}
+{{ toYaml .Values.server.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.server.tolerations }}
+      tolerations:
+{{ toYaml .Values.server.tolerations | indent 6 }}
+{{- end }}
+      volumes:
+      - configMap:
+          defaultMode: 256
+          items:
+          - key: chrony.conf
+            path: chrony.conf
+          name: {{ .Chart.Name }}-server-conf
+          optional: false
+        name: {{ .Chart.Name }}-server-conf

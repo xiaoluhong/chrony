@@ -1,0 +1,18 @@
+﻿apiVersion: v1
+data:
+{{- range $key, $value := .Values.server.ConfigMap }}
+  {{ $key }}: {{ $value | quote }}
+{{- end }}
+kind: ConfigMap
+metadata:
+  annotations:
+  name: {{ .Chart.Name }}-server-conf
+  labels:
+    app: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.global.namespace }}
+  namespace: {{ .Values.global.namespace }}
+{{- else }}
+  namespace: chrony-system
+{{- end }}

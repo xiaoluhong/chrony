@@ -1,0 +1,18 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-client
+  labels:
+    app: {{ .Chart.Name }}-client
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.global.namespace }}
+  namespace: {{ .Values.global.namespace }}
+{{- else }}
+  namespace: chrony-system
+{{- end }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app:  {{ .Chart.Name }}-client

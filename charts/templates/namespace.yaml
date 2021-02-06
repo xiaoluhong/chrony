@@ -1,0 +1,19 @@
+{{- if .Values.global.namespace }}
+kind: Namespace
+apiVersion:  v1
+metadata:
+  name: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- else }}
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: chrony-system
+  labels:
+    app: {{ .Chart.Name }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- end }}

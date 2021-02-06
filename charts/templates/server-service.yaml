@@ -1,0 +1,19 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-server
+  labels:
+    app:  {{ .Chart.Name }}-server
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+{{- if .Values.global.namespace }}
+  namespace: {{ .Values.global.namespace }}
+{{- else }}
+  namespace: chrony-system
+{{- end }}
+spec:
+  type: {{ .Values.server.service.type }}
+  ports:
+{{ toYaml .Values.server.service.ports | indent 2 }}
+  selector:
+    app: {{ .Chart.Name }}-server

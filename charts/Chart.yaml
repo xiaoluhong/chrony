@@ -1,0 +1,15 @@
+apiVersion: v1
+name: chrony
+home: https://www.xtplayer.cn/
+description: A Helm chrony chart for Kubernetes
+type: application
+version: 4.0
+appVersion: 4.0
+icon:
+keywords:
+- chrony
+sources:
+maintainers:
+- name: xiaolu hong
+  email: support@rancher.com
+engine: gotpl

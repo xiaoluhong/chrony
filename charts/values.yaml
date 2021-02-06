@@ -1,0 +1,160 @@
+global:
+  namespace: chrony-system
+  systemDefaultRegistry: 'registry.cn-shenzhen.aliyuncs.com'
+  imagePullSecrets: []
+  repository: rancher/chrony
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+serviceAccount:
+  create: false
+
+server:
+  replicaCount: 1
+  nameOverride: ""
+  fullnameOverride: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      add:
+      - SYS_TIME
+    privileged: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+
+  podSecurityPolicy:
+    enabled: false
+
+  service:
+    type: ClusterIP
+    ports:
+      - name: udp-123
+        protocol: UDP
+        port: 123
+        targetPort: 123
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  ConfigMap:
+    chrony.conf: |-
+      #使用同步的远程时钟源，理论上可以同步无限个
+      # Use public servers from the pool.ntp.org project.
+      # Please consider joining the pool (http://www.pool.ntp.org/join.html).
+      # 阿里云 NTP 服务器
+      server ntp.aliyun.com iburst
+      #根据实际时间计算出服务器增减时间的比率，然后记录到一个文件中，在系统重启后为系统做出最佳时间补偿调整
+      # Record the rate at which the system clock gains/losses time.
+      driftfile /var/lib/chrony/drift
+      #如果系统时钟的偏移量大于1秒，则允许系统时钟在前三次更新中步进
+      # Allow the system clock to be stepped in the first three updates
+      # if its offset is larger than 1 second.
+      makestep 1.0 3
+      #启用实时时钟（RTC）的内核同步
+      # Enable kernel synchronization of the real-time clock (RTC).
+      rtcsync
+      #通过使用 hwtimestamp 指令启用硬件时间戳
+      # Enable hardware timestamping on all interfaces that support it.
+      #hwtimestamp *
+      #增加调整所需的可选择源的最小数量
+      # Increase the minimum number of selectable sources required to adjust
+      # the system clock.
+      #minsources 2
+      #指定 NTP 客户端地址，以允许或拒绝连接到扮演时钟服务器的机器
+      # Allow NTP client access from local network.
+      allow 0.0.0.0/0
+      #即使没有同步到时间源，也要服务时间。
+      # Serve time even if not synchronized to a time source.
+      local stratum 10
+      #指定包含 NTP 身份验证密钥的文件
+      # Specify file containing keys for NTP authentication.
+      #keyfile /etc/chrony.keys
+      #指定日志文件
+      # Specify directory for log files.
+      logdir /var/log/chrony
+      #选择日志文件要记录的信息
+      # Select which information is logged.
+      #log measurements statistics tracking
+
+client:
+  nameOverride: ""
+  fullnameOverride: ""
+  podAnnotations: {}
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      add:
+      - SYS_TIME
+    privileged: false
+    readOnlyRootFilesystem: false
+    runAsNonRoot: false
+
+  podSecurityPolicy:
+    enabled: false
+
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  ConfigMap:
+    chrony.conf: |-
+      #使用同步的远程时钟源，理论上可以同步无限个
+      # Use public servers from the pool.ntp.org project.
+      # Please consider joining the pool (http://www.pool.ntp.org/join.html).
+
+      server chrony-server iburst
+
+      #根据实际时间计算出服务器增减时间的比率，然后记录到一个文件中，在系统重启后为系统做出最佳时间补偿调整
+      # Record the rate at which the system clock gains/losses time.
+      driftfile /var/lib/chrony/drift
+      #如果系统时钟的偏移量大于1秒，则允许系统时钟在前三次更新中步进
+      # Allow the system clock to be stepped in the first three updates
+      # if its offset is larger than 1 second.
+      makestep 1.0 3
+      #启用实时时钟（RTC）的内核同步
+      # Enable kernel synchronization of the real-time clock (RTC).
+      rtcsync
+      #通过使用 hwtimestamp 指令启用硬件时间戳
+      # Enable hardware timestamping on all interfaces that support it.
+      #hwtimestamp *
+      #增加调整所需的可选择源的最小数量
+      # Increase the minimum number of selectable sources required to adjust
+      # the system clock.
+      #minsources 2
+      #指定 NTP 客户端地址，以允许或拒绝连接到扮演时钟服务器的机器
+      # Allow NTP client access from local network.
+      allow 0.0.0.0/0
+      #即使没有同步到时间源，也要服务时间。
+      # Serve time even if not synchronized to a time source.
+      #local stratum 10
+      #指定包含 NTP 身份验证密钥的文件
+      # Specify file containing keys for NTP authentication.
+      #keyfile /etc/chrony.keys
+      #指定日志文件
+      # Specify directory for log files.
+      logdir /var/log/chrony
+      #选择日志文件要记录的信息
+      # Select which information is logged.
+      #log measurements statistics tracking

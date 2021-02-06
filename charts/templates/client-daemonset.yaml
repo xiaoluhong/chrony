@@ -1,0 +1,77 @@
+﻿apiVersion: {{ template "daemonset_api_version" . }}
+kind: DaemonSet
+metadata:
+  name: {{ .Chart.Name }}-client
+{{- if .Values.global.namespace }}
+  namespace: {{ .Values.global.namespace }}
+{{- else }}
+  namespace: chrony-system
+{{- end }}
+  labels:
+    app: {{ .Chart.Name }}-client
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+{{- if .Values.client.labels }}
+{{ toYaml .Values.client.labels | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.client.updateStrategy }}
+  updateStrategy:
+{{ toYaml .Values.client.updateStrategy | indent 4 }}
+{{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}-client
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}-client
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    {{- if .Values.client.labels }}
+    {{ toYaml .Values.client.labels | indent 4 }}
+    {{- end }}
+{{- if .Values.client.annotations }}
+{{ toYaml .Values.client.annotations | indent 8 }}
+{{- end }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-client
+        image:  {{ template "system_default_registry" . }}{{ .Values.global.repository }}:{{ .Values.global.tag }}
+        imagePullPolicy: {{ .Values.global.pullPolicy | quote }}
+        securityContext:
+{{ toYaml .Values.client.securityContext | indent 10 }}
+        {{- if .Values.client.command }}
+        command: {{ .Values.client.command }}
+        {{ end }}
+        env:
+        {{- range $key, $value := .Values.client.env }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        resources:
+{{ toYaml .Values.client.resources | indent 10 }}
+        volumeMounts:
+        - mountPath: /etc/chrony/chrony.conf
+          name: {{ .Chart.Name }}-client-conf
+          subPath: chrony.conf
+      volumes:
+      - configMap:
+          defaultMode: 256
+          items:
+          - key: chrony.conf
+            path: chrony.conf
+          name: {{ .Chart.Name }}-client-conf
+          optional: false
+        name: {{ .Chart.Name }}-client-conf
+{{- if .Values.client.extraVolumes }}
+{{ toYaml .Values.client.extraVolumes | indent 6 }}
+{{- end }}
+      nodeSelector:
+{{- if .Values.client.nodeSelector }}
+{{ toYaml .Values.client.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.client.tolerations }}
+      tolerations:
+{{ toYaml .Values.client.tolerations | indent 6 }}
+{{- end }}
